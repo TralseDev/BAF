@@ -7,7 +7,7 @@ def host_up(ip: str) -> bool:
     return True if host is up, else False
     """
     try:
-        test = subprocess.check_output(f"ping -c 3 {ip}").decode()
+        test = subprocess.check_output(["ping", "-c 3", f"{ip}"]).decode()
         if "bytes" in test.lower():
             return True
         else:
