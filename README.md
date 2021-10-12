@@ -44,5 +44,4 @@ This project is licensed under the GNU General Public License v3.0 (GNU GPLv3 Li
 - offline scanner
 - multi-threading
 - save data to not restart all scans
-- nice, unique banner :)
 - -o flag (for output > file -> logger/logging_file)
