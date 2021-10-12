@@ -11,19 +11,19 @@ class NCNotFound(Exception):
 
 
 def _netcat(port: int, binary_path: str = "/usr/bin/netcat") -> None:
-    terminals = ["gnome-terminal -x", "xterm -e", "x-terminal-emulator -e"]
-    # check if terminals are installed:
-    installed = False
-    terminal_to_use = ""
-    for terminal in terminals:
-        if os.path.isfile(f"/usr/share/applications/{terminal[:-3]}"):
-            installed = True
-            terminal_to_use = terminal
-
     try:
         os.system(f"{terminal_to_use} {binary_path} -lnvp {port}")
 
     except:
+        terminals = ["gnome-terminal -x", "xterm -e", "x-terminal-emulator -e"]
+        # check if terminals are installed:
+        installed = False
+        terminal_to_use = ""
+        for terminal in terminals:
+            if os.path.isfile(f"/usr/share/applications/{terminal[:-3]}"):
+                installed = True
+                terminal_to_use = terminal
+
         if not installed:
             answer = ""
             while answer not in ["y", "n"]:
