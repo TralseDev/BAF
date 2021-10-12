@@ -339,6 +339,8 @@ python3 {sys.argv[0]} --lhost 10.10.10.10 --lport 1337 --rhost 10.10.10.11 --rpo
     group1 = parser.add_mutually_exclusive_group(required=False)
     group1.add_argument("-v", "--verbose",
                         action="store_true", help="Verbose mode")
+    group1.add_argument("-nb", "--nobanner",
+                        action="store_true", help="No banner at start")
     group2 = parser.add_mutually_exclusive_group(required=False)
     group2.add_argument("-le", "--littleEndian",
                         action="store_true",
