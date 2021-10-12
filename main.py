@@ -357,7 +357,7 @@ python3 {sys.argv[0]} --lhost 10.10.10.10 --lport 1337 --rhost 10.10.10.11 --rpo
 
     if not (args.littleEndian or args.bigEndian):
         logging_console(
-            "There should be one convention (--littleEndian or --bigEndian), type in -h or --help for help")
+            "There should be one convention (--littleEndian or --bigEndian), type in -h or --help for help", "WARNING")
         logging_console("Exiting program...", "WARNING")
 
     if args.littleEndian and not args.bigEndian:
