@@ -206,7 +206,8 @@ def main(l_ip_port: tuple, r_ip_port: tuple, convention: str = "little", prefix=
 \x1b[91m|  _|| |_| | (__|   <| | | | | (_| | \x1b[32m | (_| | (_| | | |  __/\__ \__ \ |\ V /  __/\x1b[91m  | |_) | |_| |  _|  \x1b[39m  \__ \ (_| (_| | | | | | | |  __/ |   
 \x1b[91m|_|   \__,_|\___|_|\_\_|_| |_|\__, |  \x1b[32m \__,_|\__, |_|  \___||___/___/_| \_/ \___|\x1b[91m  |____/ \___/|_|    \x1b[39m  |___/\___\__,_|_| |_|_| |_|\___|_|   
 \x1b[91m                              |___/   \x1b[32m       |___/   Made with \x1b[36m<3                                                                                      """
-    print(banner)
+    if not nobanner:
+        print(banner)
     if verbose:
         init(True)
 
@@ -335,14 +336,15 @@ python3 {sys.argv[0]} --lhost 10.10.10.10 --lport 1337 --rhost 10.10.10.11 --rpo
     group1 = parser.add_mutually_exclusive_group(required=False)
     group1.add_argument("-v", "--verbose",
                         action="store_true", help="Verbose mode")
-    group1.add_argument("-nb", "--nobanner",
-                        action="store_true", help="No banner at start")
     group2 = parser.add_mutually_exclusive_group(required=False)
     group2.add_argument("-le", "--littleEndian",
                         action="store_true",
                         help="For Little-Endian order")
     group2.add_argument("-be", "--bigEndian",
                         action="store_true", help="For Big-Endian order")
+    group3 = parser.add_mutually_exclusive_group(required=False)
+    group3.add_argument("-nb", "--nobanner",
+                        action="store_true", help="No banner at start")
     args = parser.parse_args()
 
     if not (args.littleEndian or args.bigEndian):
