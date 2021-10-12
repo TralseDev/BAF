@@ -193,9 +193,6 @@ def generate_shellcode_main(ip_port: tuple, bad_chars: str):
 
 
 def main(l_ip_port: tuple, r_ip_port: tuple, convention: str = "little", prefix="", prefixes="", buffer_count=0, len_of_overflow=0, offset_user=0, timeout=1, verbose: bool = False, escape_fuzz: bool = False, escape_chars="", escape_bad_char_detection=False):
-    if verbose:
-        init(True)
-
     logging_console("Starting Program", "INFO")
     logging_console("Trying to connect...", "VERBOSE", end="\r")
     try:
