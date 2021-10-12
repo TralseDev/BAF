@@ -1,5 +1,7 @@
+from logger import logging_console
 import socket
 import subprocess
+from time import time
 
 
 def host_up(ip: str) -> bool:
@@ -22,7 +24,29 @@ def connect(ip_port: tuple, timeout: int = 1) -> socket:
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(timeout)
     s.connect(ip_port)
-    s.recv(1024)
+    try:
+        s.recv(1024)
+    except socket.timeout:
+        time.sleep(3)
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(timeout)
+            s.connect(ip_port)
+            s.recv(1024)
+        except socket.timeout:
+            logging_console("Connection timeout! Pinging host...", "WARNING")
+            if not host_up(ip_port[0]):
+                logging_console("Host is not up! Exiting...", "NEGATIVE")
+                exit(-1)
+            try:
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.settimeout(timeout)
+                s.connect(ip_port)
+                s.recv(1024)
+            except socket.timeout:
+                logging_console(
+                    "Tried to recieve data 3 times and no try was successfull! Exiting...", "NEGATIVE")
+                exit(-1)
     return s
 
 
