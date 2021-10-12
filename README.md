@@ -24,7 +24,7 @@ python3 main.py
 python3 main.py --lhost 127.0.0.1 --lport 1337 --rhost 127.0.0.1 --rport 2337 --prefix="OVERFLOW_COMMAND" --timeout=5 --littleEndian
 ```
 
-![Example video](./examples/example.mp4)
+[![](./examples/example.mp4)]
 
 ## Help
 
