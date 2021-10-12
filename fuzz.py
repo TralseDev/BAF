@@ -1,10 +1,9 @@
-from socket import timeout
 from logger import *
 from connector import send
 import time
 
 
-def fuzz(s, prefix, ip, port, timeout, buffer_count=0, verbose=False) -> int:
+def fuzz(prefix, ip, port, timeout, buffer_count=0) -> int:
     init()
     # fuzzing function
     buffer = prefix+" "+"A"*buffer_count
