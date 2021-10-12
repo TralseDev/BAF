@@ -1,6 +1,5 @@
 import socket
 import subprocess
-from time import time
 
 
 def host_up(ip: str) -> bool:
