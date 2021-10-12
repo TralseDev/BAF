@@ -10,6 +10,11 @@ BAF is a tool used to scan Winx64 applications for Buffer Overflow Vulnerabiliti
 
 ## Getting Started
 
+### Installation
+```
+git clone https://github.com/TralseDev/BAF.git
+```
+
 ### Executing program
 
 ```
