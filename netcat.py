@@ -12,7 +12,7 @@ class NCNotFound(Exception):
 
 def _netcat(port: int, binary_path: str = "/usr/bin/netcat") -> None:
     try:
-        os.system(f"{terminal_to_use} {binary_path} -lnvp {port}")
+        os.system(f"/bin/bash -c '{binary_path} -lnvp {port}'")
 
     except:
         terminals = ["gnome-terminal -x", "xterm -e", "x-terminal-emulator -e"]
