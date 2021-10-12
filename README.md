@@ -14,7 +14,6 @@ git clone https://github.com/TralseDev/BAF.git
 ```
 
 ### Executing program
-
 ```
 python3 main.py
 ```
@@ -24,7 +23,7 @@ python3 main.py
 python3 main.py --lhost 127.0.0.1 --lport 1337 --rhost 127.0.0.1 --rport 2337 --prefix="OVERFLOW_COMMAND" --timeout=5 --littleEndian
 ```
 
-[Video](https://github.com/TralseDev/BAF/blob/main/examples/example.mp4)
+![Example video](https://github.com/TralseDev/BAF/blob/main/examples/example.GIF)
 
 ## Help
 
