@@ -223,8 +223,7 @@ def main(l_ip_port: tuple, r_ip_port: tuple, convention: str = "little", prefix=
             offset = 0
             for prefix in range(prefixes):
                 len_of_overflow_small, offset_small = start_fuzzing(
-                    s, prefix, r_ip_port, timeout, buffer_count, verbose
-                )
+                    s, prefix, r_ip_port, timeout, buffer_count, verbose)
 
     else:
         logging_console("Escaped fuzz, will use given values", "POSITIVE")
@@ -342,12 +341,9 @@ python3 {sys.argv[0]} --lhost 10.10.10.10 --lport 1337 --rhost 10.10.10.11 --rpo
         prefix = ""
         prefixes = args.prefixes.split(",")
 
-    elif args.prefix and not args.prefixes:
+    if args.prefix and not args.prefixes:
         prefixes = ""
         prefix = args.prefix
-
-    else:
-        prefix = ""
 
     if args.escapeFuzz:
         if "," not in args.escapeFuzz:
