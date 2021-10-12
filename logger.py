@@ -26,7 +26,7 @@ def init(v=False):
 
 
 def print_banner(banner):
-    print(f"{GREEN}{banner}{RESET}Made with{RED}<3")
+    print(f"{GREEN}{banner}{RESET}")
 
 
 def logging_console(string: str, mode: str, end="\n"):
