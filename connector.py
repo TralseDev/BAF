@@ -1,7 +1,7 @@
 from logger import logging_console
 import socket
 import subprocess
-from time import time
+import time
 
 
 def host_up(ip: str) -> bool:
