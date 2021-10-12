@@ -342,9 +342,12 @@ python3 {sys.argv[0]} --lhost 10.10.10.10 --lport 1337 --rhost 10.10.10.11 --rpo
         prefix = ""
         prefixes = args.prefixes.split(",")
 
-    if args.prefix and not args.prefixes:
+    elif args.prefix and not args.prefixes:
         prefixes = ""
         prefix = args.prefix
+
+    else:
+        prefix = ""
 
     if args.escapeFuzz:
         if "," not in args.escapeFuzz:
