@@ -13,7 +13,7 @@ BAF is a tool used to scan winx64 applications for Buffer Overflow Vulnerabiliti
 ### Executing program
 
 ```
-python3 main.py 
+python3 main.py
 ```
 
 ### Examples:
