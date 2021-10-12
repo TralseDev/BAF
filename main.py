@@ -33,7 +33,7 @@ xbuf = ""
 def start_fuzzing(s: socket, prefix, r_ip_port, timeout=1, buffer_count=0, verbose=False):
     logging_console(f"Fuzzing prefix {prefix}...", "VERBOSE")
     length_of_overflow = fuzz(
-        prefix=prefix, ip=r_ip_port[0], port=r_ip_port[1], timeout=timeout, buffer_count=buffer_count, verbose=verbose)
+        prefix=prefix, ip=r_ip_port[0], port=r_ip_port[1], timeout=timeout, buffer_count=buffer_count)
 
     if length_of_overflow == -1:
         return (length_of_overflow, 0)
