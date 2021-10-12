@@ -33,6 +33,8 @@ Tralse
 
 ## Version History
 
+* 1.0
+    * Stable version
 * 0.0
     * Beta phase
 
