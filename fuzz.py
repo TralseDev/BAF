@@ -4,7 +4,7 @@ import time
 from colorama import *
 
 
-def fuzz(prefix, ip, port, timeout, buffer_count=0, verbose=False) -> int:
+def fuzz(prefix, ip, port, timeout, buffer_count=0) -> int:
     init()
     # fuzzing function
     buffer = prefix+" "+"A"*buffer_count
