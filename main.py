@@ -217,7 +217,7 @@ def main(l_ip_port: tuple, r_ip_port: tuple, convention: str = "little", prefix=
 |____ \x1b[32m/_/   \_ \x1b[91m\_|    
                     
 \x1b[91m _____           _    _            \x1b[32m                                  _          \x1b[91m    ____   ___  _____ \x1b[39m                                      
-\x1b[91m|  ___|   _  ___| | _(_)_ __   __ _ \x1b[32m    __ _  __ _ _ __ ___  ___ ___(_)_   _____\x1b[91m   | __ ) / _ \|  ___|\x1b[39m   ___  ___ __ _ _ __  _ __   ___ _ __ \x1b[35mBeta\x1b[32m
+\x1b[91m|  ___|   _  ___| | _(_)_ __   __ _ \x1b[32m    __ _  __ _ _ __ ___  ___ ___(_)_   _____\x1b[91m   | __ ) / _ \|  ___|\x1b[39m   ___  ___ __ _ _ __  _ __   ___ _ __ \x1b[35mv1.0/stable\x1b[32m
 \x1b[91m| |_ | | | |/ __| |/ / | '_ \ / _` | \x1b[32m  / _` |/ _` | '__/ _ \/ __/ __| \ \ / / _ \ \x1b[91m |  _ \| | | | |_   \x1b[39m  / __|/ __/ _` | '_ \| '_ \ / _ \ '__|
 \x1b[91m|  _|| |_| | (__|   <| | | | | (_| | \x1b[32m | (_| | (_| | | |  __/\__ \__ \ |\ V /  __/\x1b[91m  | |_) | |_| |  _|  \x1b[39m  \__ \ (_| (_| | | | | | | |  __/ |   
 \x1b[91m|_|   \__,_|\___|_|\_\_|_| |_|\__, |  \x1b[32m \__,_|\__, |_|  \___||___/___/_| \_/ \___|\x1b[91m  |____/ \___/|_|    \x1b[39m  |___/\___\__,_|_| |_|_| |_|\___|_|   
@@ -314,7 +314,7 @@ def main(l_ip_port: tuple, r_ip_port: tuple, convention: str = "little", prefix=
     addr = binascii.unhexlify(addr)
 
     start_exploitation(xbuf, addr, prefix.replace('\\\\', '\\').encode(
-        'latin1'), offset, random_port, r_ip_port, timeout)
+        'latin1'), offset, r_ip_port[1], r_ip_port, timeout)
 
 
 if __name__ == '__main__':
