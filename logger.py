@@ -6,7 +6,7 @@ verbose = False
 # Some colors
 RESET = "\x1b[39m"
 CYAN = "\x1b[36m"
-RED = "\x1b[36m"
+RED = "\x1b[31m"
 LIGHTRED = "\x1b[91m"
 YELLOW = "\x1b[33m"
 GREEN = "\x1b[32m"
