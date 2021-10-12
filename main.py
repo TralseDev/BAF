@@ -192,7 +192,25 @@ def generate_shellcode_main(ip_port: tuple, bad_chars: str):
     shell_code = generate_shellcode(ip_port, bad_chars)
 
 
-def main(l_ip_port: tuple, r_ip_port: tuple, convention: str = "little", prefix="", prefixes="", buffer_count=0, len_of_overflow=0, offset_user=0, timeout=1, verbose: bool = False, escape_fuzz: bool = False, escape_chars="", escape_bad_char_detection=False):
+def main(l_ip_port: tuple, r_ip_port: tuple, convention: str = "little", prefix="", prefixes="", buffer_count=0, len_of_overflow=0, offset_user=0, timeout=1, verbose: bool = False, escape_fuzz: bool = False, escape_chars="", escape_bad_char_detection=False, nobanner=False):
+    banner = """ ____          ______ 
+|  _ \   /\   |  ____|
+| |_) | /  \  | |__   
+|  _ < / /\ \ |  __|  
+| |_) / ____ \| |     
+|____/_/    \_\_|     
+                      
+                      
+ ______          _    _                                             _             ____   ____  ______                                       
+|  ____|        | |  (_)                                           (_)           |  _ \ / __ \|  ____|                                      
+| |__ _   _  ___| | ___ _ __   __ _    __ _  __ _ _ __ ___  ___ ___ ___   _____  | |_) | |  | | |__     ___  ___ __ _ _ __  _ __   ___ _ __ Beta
+|  __| | | |/ __| |/ / | '_ \ / _` |  / _` |/ _` | '__/ _ \/ __/ __| \ \ / / _ \ |  _ <| |  | |  __|   / __|/ __/ _` | '_ \| '_ \ / _ \ '__|
+| |  | |_| | (__|   <| | | | | (_| | | (_| | (_| | | |  __/\__ \__ \ |\ V /  __/ | |_) | |__| | |      \__ \ (_| (_| | | | | | | |  __/ |   
+|_|   \__,_|\___|_|\_\_|_| |_|\__, |  \__,_|\__, |_|  \___||___/___/_| \_/ \___| |____/ \____/|_|      |___/\___\__,_|_| |_|_| |_|\___|_|   
+                               __/ |         __/ |                                                                                          
+                              |___/         |___/                                                                                           
+"""
+    print_banner(banner)
     if verbose:
         init(True)
 
@@ -369,17 +387,22 @@ python3 {sys.argv[0]} --lhost 10.10.10.10 --lport 1337 --rhost 10.10.10.11 --rpo
     else:
         escape_chars = ""
 
+    nobanner = False
+
+    if args.nobanner:
+        nobanner = True
+
     if args.littleEndian and not args.bigEndian:
         if args.timeout:
             main((args.lhost, args.lport), (args.rhost, args.rport),
-                 args.littleEndian, prefix=prefix, prefixes=prefixes, timeout=args.timeout, verbose=args.verbose, len_of_overflow=len_of_overflow, offset_user=offset_user, escape_fuzz=escapeFuzz, escape_chars=escape_chars, escape_bad_char_detection=escapeBadChar)
+                 args.littleEndian, prefix=prefix, prefixes=prefixes, timeout=args.timeout, verbose=args.verbose, len_of_overflow=len_of_overflow, offset_user=offset_user, escape_fuzz=escapeFuzz, escape_chars=escape_chars, escape_bad_char_detection=escapeBadChar, nobanner=nobanner)
         else:
             main((args.lhost, args.lport), (args.rhost, args.rport),
-                 args.littleEndian, prefix=prefix, prefixes=prefixes, verbose=args.verbose, len_of_overflow=len_of_overflow, offset_user=offset_user, escape_fuzz=escapeFuzz, escape_chars=escape_chars, escape_bad_char_detection=escapeBadChar)
+                 args.littleEndian, prefix=prefix, prefixes=prefixes, verbose=args.verbose, len_of_overflow=len_of_overflow, offset_user=offset_user, escape_fuzz=escapeFuzz, escape_chars=escape_chars, escape_bad_char_detection=escapeBadChar, nobanner=nobanner)
     else:
         if args.timeout:
             main((args.lhost, args.lport), (args.rhost, args.rport),
-                 args.bigEndian, prefix=prefix, prefixes=prefixes, timeout=args.timeout, verbose=args.verbose, len_of_overflow=len_of_overflow, offset_user=offset_user, escape_fuzz=escapeFuzz, escape_chars=escape_chars, escape_bad_char_detection=escapeBadChar)
+                 args.bigEndian, prefix=prefix, prefixes=prefixes, timeout=args.timeout, verbose=args.verbose, len_of_overflow=len_of_overflow, offset_user=offset_user, escape_fuzz=escapeFuzz, escape_chars=escape_chars, escape_bad_char_detection=escapeBadChar, nobanner=nobanner)
         else:
             main((args.lhost, args.lport), (args.rhost, args.rport),
-                 args.bigEndian, prefix=prefix, prefixes=prefixes, verbose=args.verbose, len_of_overflow=len_of_overflow, offset_user=offset_user, escape_fuzz=escapeFuzz, escape_chars=escape_chars, escape_bad_char_detection=escapeBadChar)
+                 args.bigEndian, prefix=prefix, prefixes=prefixes, verbose=args.verbose, len_of_overflow=len_of_overflow, offset_user=offset_user, escape_fuzz=escapeFuzz, escape_chars=escape_chars, escape_bad_char_detection=escapeBadChar, nobanner=nobanner)

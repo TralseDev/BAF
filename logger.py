@@ -25,6 +25,10 @@ def init(v=False):
         verbose = v
 
 
+def print_banner(banner):
+    print(f"{GREEN}{banner}{RESET}Made with{RED}<3")
+
+
 def logging_console(string: str, mode: str, end="\n"):
     """
     mode: could be CRITICAL, WARNING, VERBOSE or INFO
