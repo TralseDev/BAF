@@ -201,7 +201,7 @@ def main(l_ip_port: tuple, r_ip_port: tuple, convention: str = "little", prefix=
     try:
         s = connect(r_ip_port)
         logging_console("Connected!"+" "*10, "POSITIVE")
-    except TimeoutError:
+    except:
         logging_console(
             "Connection timeout, could not connect. Executing ping test...", "WARNING")
         if not host_up(r_ip_port[0]):
