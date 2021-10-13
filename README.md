@@ -4,7 +4,7 @@ Python Buffer Overflow scanner.
 
 ## Description
 
-BAF is a tool used to scan Winx64 applications for Buffer Overflow Vulnerabilities. It's able to fuzz and exploit vulnerable applications and create a reverse shell.
+BAF is a tool used to scan Winx86 applications for Buffer Overflow Vulnerabilities. It's able to fuzz and exploit vulnerable applications and create a reverse shell.
 
 ## Getting Started
 
