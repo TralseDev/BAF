@@ -47,9 +47,12 @@ Tralse
 This project is licensed under the GNU General Public License v3.0 (GNU GPLv3 License)
 
 ## TODOs
-- offline scanner
+- offline scanner + `-r`,`--remote` / `-i`,`--internal` flags (standart is `-r`)
 - fuzz max length of chars needed to trigger BOF
+- allow to choose reverse shell
 - multi-threading
+- allow to remove bad char from list
+- automatic bad char detection using screen shot!
 - save data to not restart all scans
 - `-o` flag (for output > file -> logger/logging_file)
 - automatic binary debug to save time and be more precise
