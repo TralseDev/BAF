@@ -48,6 +48,8 @@ This project is licensed under the GNU General Public License v3.0 (GNU GPLv3 Li
 
 ## TODOs
 - offline scanner
+- fuzz max length of chars needed to trigger BOF
 - multi-threading
 - save data to not restart all scans
-- -o flag (for output > file -> logger/logging_file)
+- `-o` flag (for output > file -> logger/logging_file)
+- automatic binary debug to save time and be more precise
