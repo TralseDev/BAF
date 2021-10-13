@@ -281,7 +281,7 @@ def main(l_ip_port: tuple, r_ip_port: tuple, convention: str = "little", prefix=
     addr = ""
     while len(addr) == 0:
         addr = logging_console(
-            "Type in address where i.e. `PUSH ESP` is found: (format: ADDRESS without 0x)", "QUESTION")
+            "Type in address where i.e. 'JMP ESP', 'CALL ESP' OR 'PUSH ESP # RET' is found: (format: ADDRESS without 0x)", "QUESTION")
 
     if convention == "little":
         addr = little_endian(addr)
