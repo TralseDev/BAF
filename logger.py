@@ -40,7 +40,7 @@ def init(v: bool = False, save_output: str = "", allowed_to_overwrite: bool = Fa
         os.mkdir(directory)
 
 
-def backup_logs(replace: bool = False, input_output: bool = False, data: dict = {}, log_dir: str = home_folder+f".BAF/{IP}", log_file: str = f"{IP}_result.json") -> Union[dict, None]:
+def backup_logs(replace: bool = False, input_output: bool = False, data: dict = {}, log_dir: str = home_folder=f".BAF/{IP}", log_file: str = f"{IP}_result.json") -> Union[dict, None]:
     """
     :input_output: variable -> False if INPUT, True if OUTPUT
         -> INPUT if data is going to be written
